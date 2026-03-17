@@ -1,121 +1,75 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React from 'react';
+import { createBrowserRouter, RouterProvider, useLocation, useOutlet, Link } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
+import MoviesPage from './pages/MoviesPage';
+import MovieDetailPage from './pages/MovieDetailPage';
+import WatchPage from './pages/WatchPage';
+import PageTransition from './components/PageTransition';
 
-function App() {
-  const [count, setCount] = useState(0)
-
+// --- Landing Page Component ---
+function LandingPage() {
   return (
-    <>
-      <section id="center">
-        <div className="hero ">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <div className="min-h-screen flex flex-col items-center justify-center text-center p-6 bg-zinc-950">
+      <h1 className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">
+        VidKing Stream
+      </h1>
+      <p className="text-zinc-400 text-xl md:text-2xl mb-12 max-w-2xl">
+        Unlimited movies. Zero friction. Step into the next generation of streaming.
+      </p>
+      <Link 
+        to="/movies" 
+        className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold text-lg transition-transform hover:scale-105 shadow-lg shadow-red-500/20"
+      >
+        Enter App
+      </Link>
+    </div>
+  );
 }
 
-export default App
+// --- 1. The Root Layout ---
+// This acts as the "wrapper" for every single page. It detects URL changes 
+// and triggers the Framer Motion fade-out/fade-in animations.
+function RootLayout() {
+  const location = useLocation();
+  const outlet = useOutlet(); // This grabs whatever page we are currently supposed to be looking at
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      {/* We use a clever React trick here to inject the current URL as a key into the page. */}
+      {/* When the key changes, Framer Motion knows it's time to animate! */}
+      {outlet && React.cloneElement(outlet, { key: location.pathname })}
+    </AnimatePresence>
+  );
+}
+
+// --- 2. The Modern Data Router ---
+// Instead of <Routes> and <Route>, we define our app as a clean JavaScript array.
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <RootLayout />, // Every route goes through our animation wrapper first
+    children: [
+      { 
+        index: true, 
+        element: <PageTransition><LandingPage /></PageTransition> 
+      },
+      { 
+        path: "movies", 
+        element: <PageTransition><MoviesPage /></PageTransition> 
+      },
+      { 
+        path: "movie/:id", 
+        element: <PageTransition><MovieDetailPage /></PageTransition> 
+      },
+      { 
+        path: "watch/:id", 
+        element: <PageTransition><WatchPage /></PageTransition> 
+      },
+    ]
+  }
+]);
+
+// --- 3. Inject the Router ---
+export default function App() {
+  return <RouterProvider router={router} />;
+}
