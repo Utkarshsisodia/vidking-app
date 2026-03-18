@@ -70,3 +70,18 @@ export const useMovieDetails = (id) => {
     enabled: !!id, 
   });
 };
+
+// --- 4. SIMILAR MOVIES FETCH ---
+export const fetchSimilarMovies = async (id) => {
+  const response = await tmdbApi.get(`/movie/${id}/recommendations`);
+  return response.data.results; 
+};
+
+export const useSimilarMovies = (id) => {
+  return useQuery({
+    queryKey: ['similarMovies', String(id)],
+    queryFn: () => fetchSimilarMovies(id),
+    enabled: !!id, 
+    staleTime: 1000 * 60 * 30, // Keep cached for 30 minutes
+  });
+};

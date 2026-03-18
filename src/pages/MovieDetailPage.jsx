@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useMovieDetails } from '../hooks/useMovies';
 import VideoPlayer from '../components/VideoPlayer';
 import useMovieStore from '../store';
+import SimilarMovies from '@/components/SimilarMovies';
 
 export default function MovieDetailPage() {
   const { id } = useParams();
@@ -130,6 +131,11 @@ export default function MovieDetailPage() {
                 {movie.overview || "No synopsis available for this title."}
               </p>
             </div>
+            {/* 2. ADD THE SIMILAR MOVIES HERE! */}
+        {/* Placed inside the max-w-7xl container to guarantee pixel-perfect alignment */}
+        <div className="mt-20 md:mt-24 border-t border-zinc-800/80 pt-12 md:pt-16">
+          <SimilarMovies movieId={id} />
+        </div>
 
           </div>
         </div>
