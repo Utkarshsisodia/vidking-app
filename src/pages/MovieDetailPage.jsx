@@ -62,7 +62,7 @@ export default function MovieDetailPage() {
             {/* Action Buttons */}
             <div className="flex flex-col gap-3">
               <Button 
-                onClick={() => navigate(`/watch/${movie.id}`)}
+                onClick={() => navigate(`/watch/movie/${movie.id}`)}
                 className="w-full py-6 text-lg font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors duration-200"
               >
                 <Play className="mr-2 h-5 w-5 fill-white" /> Watch Now
