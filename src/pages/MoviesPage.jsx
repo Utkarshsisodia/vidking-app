@@ -70,6 +70,17 @@ export default function MoviesPage() {
 
   const moviesList = moviesData?.pages.flatMap((page) => page.results) || [];
 
+  useEffect(() => {
+    const savedScroll = sessionStorage.getItem('moviesScrollPosition');
+    if (savedScroll && moviesList.length > 0) {
+      // Use a tiny timeout to ensure the DOM has painted the grid before jumping
+      setTimeout(() => {
+        window.scrollTo({ top: parseInt(savedScroll, 10), behavior: 'instant' });
+        sessionStorage.removeItem('moviesScrollPosition'); // Clear it so it doesn't trigger randomly
+      }, 0);
+    }
+  }, [moviesList.length]);
+
   const sectionTitle = 
     activeSort === 'popularity.desc' ? 'Most Popular' :
     activeSort === 'vote_average.desc' ? 'Top Rated' :
@@ -201,7 +212,10 @@ export default function MoviesPage() {
               return (
                 <motion.div
                   key={`${movie.id}-${index}`}
-                  onClick={() => navigate(`/movie/${movie.id}`)}
+                  onClick={() => {
+                    sessionStorage.setItem('moviesScrollPosition', window.scrollY);
+                    navigate(`/movie/${movie.id}`);
+                  }}
                   onMouseEnter={() => handlePrefetch(movie.id)}
                   initial="rest"
                   whileHover="hover"

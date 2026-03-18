@@ -7,6 +7,10 @@ import WatchPage from './pages/WatchPage';
 import PageTransition from './components/PageTransition';
 import SplashScreen from './components/SplashScreen';
 
+if ('scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual';
+}
+
 // --- Landing Page Component ---
 function LandingPage() {
   return (
@@ -32,12 +36,16 @@ function LandingPage() {
 // and triggers the Framer Motion fade-out/fade-in animations.
 function RootLayout() {
   const location = useLocation();
-  const outlet = useOutlet(); // This grabs whatever page we are currently supposed to be looking at
+  const outlet = useOutlet();
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      {/* We use a clever React trick here to inject the current URL as a key into the page. */}
-      {/* When the key changes, Framer Motion knows it's time to animate! */}
+    // 4. Use onExitComplete! This waits until the old page is 100% gone, 
+    // THEN resets the scroll to the top before the new page fades in.
+    <AnimatePresence 
+      mode="wait" 
+      initial={false}
+      onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}
+    >
       {outlet && React.cloneElement(outlet, { key: location.pathname })}
     </AnimatePresence>
   );
