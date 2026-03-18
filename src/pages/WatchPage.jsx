@@ -1,16 +1,21 @@
-import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import VideoPlayer from '../components/VideoPlayer';
 
 export default function WatchPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Determine type from URL (e.g., /watch/tv/123 vs /watch/movie/123)
+  const isTVShow = location.pathname.includes('/tv/');
   
-  // autoPlay=true ensures it starts immediately
-  const embedUrl = `https://www.vidking.net/embed/movie/${id}?autoPlay=true`;
+  // State for TV shows (defaults to S1 E1)
+  const [season, setSeason] = useState(1);
+  const [episode, setEpisode] = useState(1);
 
   return (
-    // min-h-screen and flex ensure the content is perfectly centered vertically and horizontally
     <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6 md:p-12">
       
       {/* Top Bar for the Back Button */}
@@ -23,14 +28,23 @@ export default function WatchPage() {
         </button>
       </div>
 
-      {/* Centered Video Player Container */}
-      <div className="w-full max-w-6xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-zinc-800 animate-in fade-in zoom-in-95 duration-500">
-        <iframe 
-          src={embedUrl}
-          className="w-full h-full border-0"
-          allowFullScreen
-        />
-      </div>
+      {/* REUSED COMPONENT: Passing down the correct props and hiding its internal back button */}
+      <VideoPlayer 
+        tmdbId={id} 
+        type={isTVShow ? 'tv' : 'movie'} 
+        season={season} 
+        episode={episode}
+        showBackButton={false} 
+      />
+
+      {/* Temporary indicator so users know which episode is playing */}
+      {isTVShow && (
+        <div className="w-full max-w-5xl mt-4 flex justify-end animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="bg-zinc-900 border border-zinc-800 text-zinc-300 px-4 py-2 rounded-lg text-sm font-medium">
+            Playing: Season {season} • Episode {episode}
+          </div>
+        </div>
+      )}
 
     </div>
   );

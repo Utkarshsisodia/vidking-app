@@ -85,3 +85,26 @@ export const useSimilarMovies = (id) => {
     staleTime: 1000 * 60 * 30, // Keep cached for 30 minutes
   });
 };
+
+// --- 5. UNIVERSAL MULTI-SEARCH ---
+export const fetchMultiSearch = async (query) => {
+  if (!query || !query.trim()) return [];
+  const response = await tmdbApi.get('/search/multi', {
+    params: { query: query.trim() }
+  });
+  
+  // TMDB's multi-search also returns Actors/People. 
+  // We filter those out so we only get Movies and TV Shows!
+  return response.data.results.filter(
+    (item) => item.media_type === 'movie' || item.media_type === 'tv'
+  );
+};
+
+export const useMultiSearch = (query) => {
+  return useQuery({
+    queryKey: ['multiSearch', query],
+    queryFn: () => fetchMultiSearch(query),
+    enabled: !!(query && query.trim()), // Only run the query if there is text in the box
+    staleTime: 1000 * 60 * 5, 
+  });
+};
