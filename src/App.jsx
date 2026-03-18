@@ -1,10 +1,11 @@
-import React from 'react';
+import React,{ useState } from 'react';
 import { createBrowserRouter, RouterProvider, useLocation, useOutlet, Link } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
+import {motion, AnimatePresence } from 'framer-motion';
 import MoviesPage from './pages/MoviesPage';
 import MovieDetailPage from './pages/MovieDetailPage';
 import WatchPage from './pages/WatchPage';
 import PageTransition from './components/PageTransition';
+import SplashScreen from './components/SplashScreen';
 
 // --- Landing Page Component ---
 function LandingPage() {
@@ -71,5 +72,35 @@ const router = createBrowserRouter([
 
 // --- 3. Inject the Router ---
 export default function App() {
-  return <RouterProvider router={router} />;
+  // 1. Lazy-initialize the state by checking sessionStorage first!
+  const [isReady, setIsReady] = useState(() => {
+    // If this returns true, the user has already seen it this session.
+    return sessionStorage.getItem('hasSeenSplash') === 'true';
+  });
+
+  // 2. Create a handler to fire when the splash screen finishes
+  const handleSplashFinish = () => {
+    sessionStorage.setItem('hasSeenSplash', 'true'); // Save the memory!
+    setIsReady(true); // Reveal the app
+  };
+
+  return (
+    <>
+      <AnimatePresence mode="wait">
+        {!isReady && (
+          <SplashScreen onFinish={handleSplashFinish} />
+        )}
+      </AnimatePresence>
+
+      {isReady && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <RouterProvider router={router} />
+        </motion.div>
+      )}
+    </>
+  );
 }

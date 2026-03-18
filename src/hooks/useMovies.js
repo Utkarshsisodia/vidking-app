@@ -1,19 +1,32 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import tmdbApi from '../services/api'; // Import our new custom instance!
 
-// --- 1. TRENDING FETCH ---
-export const fetchTrendingMovies = async ({ pageParam = 1 }) => {
-  // Look how clean this is now! We just pass the endpoint and the page parameter.
-  const response = await tmdbApi.get('/trending/movie/day', {
-    params: { page: pageParam }
+// --- 1. UNIFIED MOVIE LIST FETCH (Trending & Discover) ---
+export const fetchMoviesList = async ({ pageParam = 1, sortBy }) => {
+  // If no sort is applied, return the default Trending list
+  if (!sortBy) {
+    const response = await tmdbApi.get('/trending/movie/day', {
+      params: { page: pageParam }
+    });
+    return response.data;
+  }
+  
+  // If a sort IS applied, use the powerful Discover endpoint
+  const response = await tmdbApi.get('/discover/movie', {
+    params: { 
+      page: pageParam,
+      sort_by: sortBy,
+      'vote_count.gte': 300, // Crucial: Ignores unknown movies with just one 10-star rating
+    }
   });
   return response.data; 
 };
 
-export const useTrendingMovies = () => {
+export const useMoviesList = (sortBy) => {
   return useInfiniteQuery({
-    queryKey: ['trendingMovies'],
-    queryFn: fetchTrendingMovies,
+    // We add sortBy to the queryKey so TanStack caches each sorted list separately!
+    queryKey: ['moviesList', sortBy || 'trending'], 
+    queryFn: ({ pageParam }) => fetchMoviesList({ pageParam, sortBy }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.page < lastPage.total_pages) return lastPage.page + 1;
