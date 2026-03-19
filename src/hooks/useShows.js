@@ -62,3 +62,18 @@ export const useSimilarShows = (id) => {
     staleTime: 1000 * 60 * 30, 
   });
 };
+
+// --- 5. SEASON DETAILS FETCH (Episodes) ---
+export const fetchSeasonDetails = async (id, seasonNumber) => {
+  const response = await tmdbApi.get(`/tv/${id}/season/${seasonNumber}`);
+  return response.data;
+};
+
+export const useSeasonDetails = (id, seasonNumber) => {
+  return useQuery({
+    queryKey: ['seasonDetails', String(id), String(seasonNumber)],
+    queryFn: () => fetchSeasonDetails(id, seasonNumber),
+    enabled: !!id && !!seasonNumber,
+    staleTime: 1000 * 60 * 30, // Keep cached for 30 minutes
+  });
+};
