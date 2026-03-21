@@ -8,6 +8,7 @@ import PageTransition from './components/PageTransition';
 import SplashScreen from './components/SplashScreen';
 import ShowsPage from './pages/ShowsPage';
 import ShowDetailPage from './pages/ShowDetailPage';
+import HomePage from './pages/HomePage';
 
 if ('scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual';
@@ -105,7 +106,7 @@ const router = createBrowserRouter([
     children: [
       { 
         index: true, 
-        element: <PageTransition><LandingPage /></PageTransition> 
+        element: <PageTransition><HomePage /></PageTransition> 
       },
       { 
         path: "movies", 

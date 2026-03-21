@@ -259,3 +259,6 @@ code {
     @apply bg-zinc-950 text-white min-h-screen antialiased;}
   html {
     @apply font-sans;}}
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
