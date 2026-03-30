@@ -27,9 +27,12 @@ export default function ShowsPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [tempSort, setTempSort] = useState(activeSort); 
 
-  useEffect(() => {
+const handleToggleFilter = () => {
+  if(!isFilterOpen){
     setTempSort(activeSort);
-  }, [activeSort]);
+  }
+    setIsFilterOpen((prev) => !prev);
+  };
 
   // Use the new TV hook
   const { data: showsData, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } = useShowsList(activeSort);
@@ -63,8 +66,8 @@ export default function ShowsPage() {
     setTempSort(null);
     setSearchParams({}); 
   };
-
-  const showsList = showsData?.pages.flatMap((page) => page.results) || [];
+  const rawShows = showsData?.pages.flatMap((page) => page.results) || [];
+  const showsList = Array.from(new Map(rawShows.map(show => [show.id, show])).values());
 
   // Scroll Restoration Hook
   useEffect(() => {
@@ -111,7 +114,7 @@ export default function ShowsPage() {
           
           <Button 
             variant="outline"
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            onClick={handleToggleFilter}
             className={`transition-all duration-200 ${
               isFilterOpen || activeSort
               ? 'bg-zinc-800 border-zinc-700 text-zinc-200 hover:bg-zinc-700/80'
@@ -173,13 +176,13 @@ export default function ShowsPage() {
         {/* Shows Grid */}
         {showsList.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 relative z-0">
-            {showsList.map((show, index) => {
+            {showsList.map((show) => {
               const posterUrl = show.poster_path ? `https://image.tmdb.org/t/p/w500${show.poster_path}` : null;
               if (!posterUrl) return null;
 
               return (
                 <motion.div
-                  key={`${show.id}-${index}`}
+                  key={show.id}
                   onClick={() => {
                     sessionStorage.setItem('showsScrollPosition', window.scrollY);
                     navigate(`/show/${show.id}`);

@@ -27,7 +27,8 @@ export default function VideoPlayer({ tmdbId, type = 'movie', season = 1, episod
       )}
       
       <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl ring-1 ring-zinc-800">
-        <iframe 
+        <iframe
+          title={`Video Player for ${type === 'movie' ? 'Movie' : 'TV Show'} ${tmdbId}`} 
           src={embedUrl}
           className="w-full h-full border-0"
           allowFullScreen

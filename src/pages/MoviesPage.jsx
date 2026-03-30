@@ -31,9 +31,12 @@ export default function MoviesPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [tempSort, setTempSort] = useState(activeSort); 
 
-  useEffect(() => {
+const handleToggleFilter = () => {
+  if(!isFilterOpen){
     setTempSort(activeSort);
-  }, [activeSort]);
+  }
+    setIsFilterOpen((prev) => !prev);
+  };
 
   const { data: moviesData, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } = useMoviesList(activeSort);
 
@@ -67,8 +70,8 @@ export default function MoviesPage() {
     setTempSort(null);
     setSearchParams({}); 
   };
-
-  const moviesList = moviesData?.pages.flatMap((page) => page.results) || [];
+  const rawMovies = moviesData?.pages.flatMap((page) => page.results) || [];
+  const moviesList = Array.from(new Map(rawMovies.map(movie => [movie.id, movie])).values());
 
   useEffect(() => {
     const savedScroll = sessionStorage.getItem('moviesScrollPosition');
@@ -114,7 +117,7 @@ export default function MoviesPage() {
           
           <Button 
             variant="outline"
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            onClick={handleToggleFilter}
             // Kept the subtle styling for the main toggle button
             className={`transition-all duration-200 ${
               isFilterOpen || activeSort
@@ -205,13 +208,13 @@ export default function MoviesPage() {
         
         {moviesList.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 relative z-0">
-            {moviesList.map((movie, index) => {
+            {moviesList.map((movie) => {
               const posterUrl = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null;
               if (!posterUrl) return null;
 
               return (
                 <motion.div
-                  key={`${movie.id}-${index}`}
+                  key={movie.id}
                   onClick={() => {
                     sessionStorage.setItem('moviesScrollPosition', window.scrollY);
                     navigate(`/movie/${movie.id}`);

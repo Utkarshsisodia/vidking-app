@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Loader2, Film, Tv, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-// 1. ADDED: Import the query client and both fetch functions!
 import { useQueryClient } from '@tanstack/react-query';
 import { useMultiSearch, fetchMovieDetails } from '../hooks/useMovies';
 import { fetchShowDetails } from '../hooks/useShows'; 
@@ -22,10 +21,7 @@ export default function SearchBar() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   
-  // 2. ADDED: Initialize the query client
   const queryClient = useQueryClient();
-
-  // 800ms debounce for mobile-friendly typing
   const debouncedSearch = useDebounce(searchTerm, 800);
 
   const { data: results, isLoading } = useMultiSearch(debouncedSearch);
@@ -50,7 +46,6 @@ export default function SearchBar() {
     }
   };
 
-  // 3. ADDED: The Smart Prefetch Function
   const handlePrefetch = (item) => {
     if (item.media_type === 'tv') {
       queryClient.prefetchQuery({
@@ -123,12 +118,11 @@ export default function SearchBar() {
                   const poster = item.poster_path ? `https://image.tmdb.org/t/p/w92${item.poster_path}` : null;
 
                   return (
-                    <div
+                    <button
                       key={item.id}
                       onClick={() => handleResultClick(item)}
-                      // 4. ADDED: Fire the prefetch the moment the mouse enters the search result!
                       onMouseEnter={() => handlePrefetch(item)}
-                      className="flex items-center gap-3 p-3 hover:bg-zinc-800/80 cursor-pointer transition-colors"
+                      className="w-full text-left flex items-center gap-3 p-3 hover:bg-zinc-800/80 cursor-pointer transition-colors"
                     >
                       <div className="w-10 h-14 bg-zinc-800 rounded flex-shrink-0 overflow-hidden">
                         {poster ? (
@@ -157,7 +151,7 @@ export default function SearchBar() {
                           </span>
                         </div>
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
