@@ -1,6 +1,11 @@
-import React,{ useState } from 'react';
-import { createBrowserRouter, RouterProvider, useLocation, useOutlet, Link } from 'react-router-dom';
-import {motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { createBrowserRouter, RouterProvider, useLocation, useOutlet, Link, Navigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// --- Auth Store ---
+import useAuthStore from './store/Auth';
+
+// --- Pages & Components ---
 import MoviesPage from './pages/MoviesPage';
 import MovieDetailPage from './pages/MovieDetailPage';
 import WatchPage from './pages/WatchPage';
@@ -9,17 +14,31 @@ import SplashScreen from './components/SplashScreen';
 import ShowsPage from './pages/ShowsPage';
 import ShowDetailPage from './pages/ShowDetailPage';
 import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
 
 if ('scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual';
+}
+
+// --- Auth Wrappers (The Gates) ---
+
+// 1. AuthGate: If not logged in, show Login. If logged in, show the requested page (Home).
+function AuthGate({ children }) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  return isAuthenticated ? children : <LoginPage />;
+}
+
+// 2. GuestGate: If logged in, block them from the Login page and redirect to Home.
+function GuestGate({ children }) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  return isAuthenticated ? <Navigate to="/" replace /> : children;
 }
 
 // --- Landing Page Component ---
 function LandingPage() {
   return (
     <div className="min-h-screen relative flex flex-col items-center justify-center text-center p-6 bg-zinc-950 overflow-hidden">
-      
-      {/* Optional: A very subtle background grid to make it feel like a premium app interface */}
       <div className="absolute inset-0 bg-[#0a0a0a] bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none"></div>
 
       <div className="relative z-10 flex flex-col items-center w-full max-w-5xl mx-auto">
@@ -30,18 +49,11 @@ function LandingPage() {
           What are we watching today?
         </p>
 
-        {/* --- TWO-CARD CONTAINER --- */}
-        {/* flex-col on mobile so they stack, sm:flex-row on bigger screens so they are side-by-side */}
         <div className="flex flex-col sm:flex-row justify-center items-center gap-8 md:gap-16 w-full px-4">
-          
           {/* MOVIES CARD */}
-          <Link 
-            to="/movies" 
-            className="group flex flex-col items-center gap-5 transition-all w-full sm:w-auto"
-          >
+          <Link to="/movies" className="group flex flex-col items-center gap-5 transition-all w-full sm:w-auto">
             <div className="w-40 h-40 md:w-48 md:h-48 rounded-[2rem] border border-zinc-800 bg-zinc-900/40 shadow-xl group-hover:-translate-y-2 group-hover:border-cyan-500 group-hover:bg-zinc-900/80 group-hover:shadow-[0_0_40px_rgba(34,211,238,0.15)] transition-all duration-500 relative flex items-center justify-center backdrop-blur-sm">
               <div className="w-16 h-16 md:w-20 md:h-20 text-cyan-500 group-hover:text-cyan-400 group-hover:[filter:drop-shadow(0_0_15px_rgba(34,211,238,0.6))] transition-all duration-500">
-                {/* Custom Film Strip Icon */}
                 <svg viewBox="0 0 24 24" fill="none" className="w-full h-full" stroke="currentColor" strokeWidth="1.5">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                   <line x1="3" y1="9" x2="21" y2="9"/>
@@ -55,23 +67,17 @@ function LandingPage() {
           </Link>
 
           {/* TV SERIES CARD */}
-          <Link 
-            to="/shows" 
-            className="group flex flex-col items-center gap-5 transition-all w-full sm:w-auto"
-          >
+          <Link to="/shows" className="group flex flex-col items-center gap-5 transition-all w-full sm:w-auto">
             <div className="w-40 h-40 md:w-48 md:h-48 rounded-[2rem] border border-zinc-800 bg-zinc-900/40 shadow-xl group-hover:-translate-y-2 group-hover:border-cyan-500 group-hover:bg-zinc-900/80 group-hover:shadow-[0_0_40px_rgba(34,211,238,0.15)] transition-all duration-500 relative flex items-center justify-center backdrop-blur-sm">
               <div className="w-16 h-16 md:w-20 md:h-20 text-cyan-500 group-hover:text-cyan-400 group-hover:[filter:drop-shadow(0_0_15px_rgba(34,211,238,0.6))] transition-all duration-500">
-                {/* Custom Retro TV Icon */}
                 <svg viewBox="0 0 24 24" fill="none" className="w-full h-full" stroke="currentColor" strokeWidth="1.5">
                   <rect x="2" y="7" width="20" height="15" rx="2" ry="2"/>
-                  {/* The TV Antennas */}
                   <polyline points="17 2 12 7 7 2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
             </div>
             <span className="text-xl md:text-2xl font-bold text-zinc-400 group-hover:text-white tracking-wide transition-colors duration-300">TV Series</span>
           </Link>
-
         </div>
       </div>
     </div>
@@ -79,15 +85,11 @@ function LandingPage() {
 }
 
 // --- 1. The Root Layout ---
-// This acts as the "wrapper" for every single page. It detects URL changes 
-// and triggers the Framer Motion fade-out/fade-in animations.
 function RootLayout() {
   const location = useLocation();
   const outlet = useOutlet();
 
   return (
-    // 4. Use onExitComplete! This waits until the old page is 100% gone, 
-    // THEN resets the scroll to the top before the new page fades in.
     <AnimatePresence 
       mode="wait" 
       initial={false}
@@ -102,39 +104,57 @@ function RootLayout() {
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <RootLayout />, // Every route goes through our animation wrapper first
+    element: <RootLayout />,
     children: [
       { 
         index: true, 
-        element: <PageTransition><HomePage /></PageTransition> 
+        // Wrap HomePage in AuthGate. It will serve LoginPage if they aren't logged in.
+        element: (
+          <AuthGate>
+            <PageTransition><HomePage /></PageTransition>
+          </AuthGate>
+        )
       },
       { 
+        path: "login", 
+        // Wrap explicit /login navigations in GuestGate
+        element: (
+          <GuestGate>
+            <LoginPage />
+          </GuestGate>
+        ) 
+      },
+      { 
+        path: "signup", 
+        element: (
+          <GuestGate>
+            <SignupPage />
+          </GuestGate>
+        ) 
+      },    
+      { 
         path: "movies", 
-        element: <PageTransition><MoviesPage /></PageTransition> 
+        element: <AuthGate><PageTransition><MoviesPage /></PageTransition></AuthGate> 
       },
       { 
         path: "movie/:id", 
-        element: <PageTransition><MovieDetailPage /></PageTransition> 
+        element: <AuthGate><PageTransition><MovieDetailPage /></PageTransition></AuthGate> 
       },
-      
-      // FIXED: Removed leading slashes and added PageTransition wrappers!
       { 
         path: "shows", 
-        element: <PageTransition><ShowsPage /></PageTransition> 
+        element: <AuthGate><PageTransition><ShowsPage /></PageTransition></AuthGate>
       },
       { 
         path: "show/:id", 
-        element: <PageTransition><ShowDetailPage /></PageTransition> 
+        element: <AuthGate><PageTransition><ShowDetailPage /></PageTransition></AuthGate>
       },
-
-      // FIXED: Added PageTransition to the Watch pages too!
       { 
         path: "watch/movie/:id", 
-        element: <PageTransition><WatchPage /></PageTransition> 
+        element: <AuthGate><PageTransition><WatchPage /></PageTransition></AuthGate> 
       },
       { 
         path: "watch/tv/:id", 
-        element: <PageTransition><WatchPage /></PageTransition> 
+        element: <AuthGate><PageTransition><WatchPage /></PageTransition></AuthGate>
       },
     ]
   }
@@ -142,27 +162,33 @@ const router = createBrowserRouter([
 
 // --- 3. Inject the Router ---
 export default function App() {
-  // 1. Lazy-initialize the state by checking sessionStorage first!
-  const [isReady, setIsReady] = useState(() => {
-    // If this returns true, the user has already seen it this session.
+  // Grab auth actions and status from Zustand
+  const { checkSession, isAppReady } = useAuthStore();
+  
+  const [isSplashDone, setIsSplashDone] = useState(() => {
     return sessionStorage.getItem('hasSeenSplash') === 'true';
   });
 
-  // 2. Create a handler to fire when the splash screen finishes
+  // Fire Appwrite check immediately on mount
+  useEffect(() => {
+    checkSession();
+  }, [checkSession]);
+
   const handleSplashFinish = () => {
-    sessionStorage.setItem('hasSeenSplash', 'true'); // Save the memory!
-    setIsReady(true); // Reveal the app
+    sessionStorage.setItem('hasSeenSplash', 'true');
+    setIsSplashDone(true);
   };
 
+  // The app only renders if BOTH the splash screen is finished AND Appwrite has checked the cookie
   return (
-    <>
+    <div className="bg-zinc-950 min-h-screen">
       <AnimatePresence mode="wait">
-        {!isReady && (
+        {!isSplashDone && (
           <SplashScreen onFinish={handleSplashFinish} />
         )}
       </AnimatePresence>
 
-      {isReady && (
+      {isSplashDone && isAppReady && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -171,6 +197,6 @@ export default function App() {
           <RouterProvider router={router} />
         </motion.div>
       )}
-    </>
+    </div>
   );
 }
